@@ -1,0 +1,9 @@
+*.log
+test_account_map
+*.trs
+test_base64
+test_identities
+test_introspect
+test_json
+test_parser
+test_strings

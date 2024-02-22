@@ -1,0 +1,131 @@
+all: help
+
+help:
+	@echo "Usage: make [develop|test|release]"
+
+############################################################################
+# INSTALL PREREQUISITES
+#
+# Install dependencies using sudo as needed. This is all very CentOS 7
+# specific. It is provided as a convenience factor; if we support additional
+# distros, this will likely need to move to documentation.
+############################################################################
+
+#
+# Phase 1: EPEL Repo (required by following phases)
+#
+
+PREREQS:= epel-release
+
+MISSING_PREREQS:=$(shell \
+	for p in ${PREREQS}; do \
+		rpm -q $$p > /dev/null || echo $$p; \
+	done)
+
+install_prereqs:
+	[ -z "$(MISSING_PREREQS)" ] || sudo yum install -y $(MISSING_PREREQS)
+
+.PHONY: install_prereqs
+
+#
+# Phase 2: Development Prereqs
+#
+
+DEVELOP_PREREQS=\
+	autoconf \
+	automake \
+	cmake3 \
+	libcmocka-devel \
+	libcmocka \
+	libcmocka-static \
+	gcc \
+	json-c-devel \
+	libcurl-devel \
+	libtool \
+	libtool-ltdl-devel \
+	openssl-devel \
+	pam-devel \
+	pkgconfig \
+	python3 \
+	python-setuptools
+
+MISSING_DEVELOP_PREREQS=$(shell \
+	for p in ${DEVELOP_PREREQS}; do \
+		rpm -q $$p > /dev/null || echo $$p; \
+	done)
+
+install_develop_prereqs: install_prereqs
+	[ -z "$(MISSING_DEVELOP_PREREQS)" ] || sudo yum install -y $(MISSING_DEVELOP_PREREQS)
+
+.PHONY: install_develop_prereqs
+
+#
+# Phase 3: Release Prereqs
+#
+
+RELEASE_PREREQS=\
+	checkpolicy \
+	policycoreutils-python \
+	python-setuptools \
+	rpm-build
+
+MISSING_RELEASE_PREREQS=$(shell \
+	for p in ${RELEASE_PREREQS}; do \
+		rpm -q $$p > /dev/null || echo $$p; \
+	done)
+
+_install_release_prereqs: install_develop_prereqs
+	[ -z "$(MISSING_RELEASE_PREREQS)" ] || sudo yum install -y $(MISSING_RELEASE_PREREQS)
+
+.PHONY: _install_release_prereqs
+
+############################################################################
+# Main build targets
+############################################################################
+
+_setup: install_develop_prereqs
+	[ -f configure ] || autoreconf -i
+	[ -f Makefile ] || CFLAGS="$(_CFLAGS)" LDFLAGS="$(LDFLAGS)" ./configure $(CONFIGURE_OPTS)
+	make
+
+develop: _CFLAGS=-DDEBUG -Wall -ggdb3 $(CFLAGS)
+develop: _setup
+	make -C src/config develop
+
+test: develop
+	make check
+
+define DIRTY_RELEASE
+###############################################################################
+# WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNIG WARNING
+#
+# This release build is not on a release tag. Its version will be modified to
+# use the .dev suffix.
+#
+# Do not use in production. Do not distribute.
+###############################################################################
+endef
+export DIRTY_RELEASE
+
+RELEASE_TAG=$(shell \
+        git describe --tags --match 'SERVER_*' | \
+        sed 's/\(SERVER_[0-9]\+\.[0-9]\+\).*/\1/'\
+)
+
+_check_release:
+	@git diff --quiet $(RELEASE_TAG) -- . > /dev/null; \
+	if [ $$? != 0 ]; \
+	then \
+		echo "$$DIRTY_RELEASE"; \
+		sed -i 's/^##develop //' configure.ac; \
+	fi
+
+release: _CFLAGS=-O3 $(CFLAGS)
+release: _check_release _setup _install_release_prereqs
+	make dist
+	mkdir -p BUILD BUILDROOT RPMS SOURCES SPECS SRPMS
+	cp oauth_ssh-*.tar.gz SOURCES
+	echo "%_topdir " `pwd` >> ~/.rpmmacros
+	rpmbuild -v -bb --clean  packaging/fedora/oauth-ssh.spec
+
+.PHONY: _setup develop test release
