@@ -41,6 +41,29 @@ _add_acct_mapping(struct account_map    ** map,
 	*map = ptr;
 }
 
+static void
+_add_acct_mapping_from_text(struct account_map ** map,
+                            char               *  id,
+                            const char         *  acct)
+{
+	for (struct account_map * ptr = *map; ptr; ptr = ptr->next)
+	{
+		if (strcmp(ptr->id, id) == 0)
+		{
+			if (!key_in_list(CONST(char *, ptr->accounts), acct))
+				insert(&ptr->accounts, acct);
+			return;
+		}
+	}
+
+	struct account_map * ptr = calloc(1, sizeof(*ptr));
+	ptr->username = strdup(id);
+	ptr->id = strdup(id);
+	insert(&ptr->accounts, acct);
+	ptr->next = *map;
+	*map = ptr;
+}
+
 static char *
 _acct_from_username(const char * username)
 {
@@ -108,6 +131,40 @@ _build_map_file_account_map(const struct config     * config,
 	return map;
 }
 
+static struct account_map *
+_build_map_file_account_map_without_globus(const struct config * config)
+{
+	struct account_map * map = NULL;
+
+	for (int i = 0; config->map_files && config->map_files[i]; i++)
+	{
+		// We want to continue even if a map file is missing or unreadable
+		// to allow users to continue to log in with the mappings available.
+		FILE * fptr = fopen(config->map_files[i], "r");
+		if (!fptr)
+		{
+			logger(LOG_TYPE_ERROR,
+			       "Could not open %s: %m",
+			       config->map_files[i]);
+			continue;
+		}
+
+		char * key = NULL;
+		char ** values = NULL;
+		while (read_next_pair(fptr, &key, &values))
+		{
+			for (int v = 0; values && values[v]; v++)
+			{
+				_add_acct_mapping_from_text(&map, key, values[v]);
+			}
+			free(key);
+			free_array(values);
+		}
+		fclose(fptr);
+	}
+	return map;
+}
+
 /*******************************************************************************
  * Public Functions
  ******************************************************************************/
@@ -134,6 +191,15 @@ account_map_init(const struct config * config, const struct identities * ids)
 			}
 		}
 	}
+	return map;
+}
+
+struct account_map *
+account_map_init_without_globus(const struct config * config)
+{
+	// Collect every matching map file entry
+	struct account_map * map = _build_map_file_account_map_without_globus(config);
+
 	return map;
 }
 
@@ -170,6 +236,19 @@ acct_to_username(const struct account_map * map, const char * acct)
 	{
 		if (key_in_list(CONST(char *,map->accounts), acct))
 			return map->username;
+	}
+	return NULL;
+}
+
+char **
+acct_to_local_accounts(const struct account_map * map, const char * acct)
+{
+	for (; map; map = map->next)
+	{
+		if (strcmp(map->id, acct) == 0)
+		{
+			return map->accounts;
+		}
 	}
 	return NULL;
 }

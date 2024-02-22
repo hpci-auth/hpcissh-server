@@ -41,6 +41,11 @@ struct config {
 	// SciTokens Section
 	//////
 	char ** issuers;
+
+	//////
+	// HPCI Section
+	//////
+	char ** audiences;
 };
 
 struct config * config_init(int flags, int argc, const char ** argv);

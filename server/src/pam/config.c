@@ -220,6 +220,17 @@ parse_file(struct config * config)
 	    free_array(save_ptr);
 	}
         else
+        //////
+        // HPCI Section
+        //////
+        if (strcmp(key, "accepted_audiences") == 0)
+        {
+            char ** save_ptr = config->audiences;
+            config->audiences = merge_values(config->audiences,
+                                                 values);
+            free_array(save_ptr);
+        }
+        else
         {
             logger(LOG_TYPE_ERROR,
                    "Unknown directive '%s' in %s",

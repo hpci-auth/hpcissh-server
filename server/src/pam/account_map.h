@@ -23,6 +23,9 @@ struct account_map {
 struct account_map *
 account_map_init(const struct config *, const struct identities *);
 
+struct account_map *
+account_map_init_without_globus(const struct config * config);
+
 void
 account_map_fini(struct account_map *);
 
@@ -31,5 +34,8 @@ is_acct_in_map(const struct account_map * map, const char * acct);
 
 const char *
 acct_to_username(const struct account_map * map, const char * acct);
+
+char **
+acct_to_local_accounts(const struct account_map * map, const char * acct);
 
 #endif /* _ACCOUNT_MAP_H_ */

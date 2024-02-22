@@ -10,6 +10,8 @@
  */
 #include "logger.h"
 #include "config.h"
+#include "account_map.h"
+
 int scitoken_verify(const char * auth_line, const struct config * config, const char * scitoken_requested_user)
 {
     SciToken scitoken;
@@ -65,20 +67,32 @@ int scitoken_verify(const char * auth_line, const struct config * config, const 
 
     //Preparing for enforcer test
     Enforcer enf;
-    char hostname[1024];
-    const char* aud_list[2];
-
-    //Retrieve the hostname for the audience. It is using hostname(NOT domain name). Set payload accordingly
-    if (gethostname(hostname, 1024) != 0)
-    {
-        logger(LOG_TYPE_INFO,
-        	"Failed to get hostname");
-        return 0;
+    const char *aud_list[1] = { NULL };
+    const char **audp;
+    if (config->audiences) {
+        audp = (const char **)(config->audiences);
+    } else {
+        audp = aud_list;
     }
-    aud_list[0] = hostname;
-    aud_list[1] = NULL;
 
-    if (!(enf = enforcer_create(issuer_ptr, aud_list, &err_msg)))
+    char audiences[1024] = { 0 };
+    size_t len = 0;
+    for (int i = 0; *(audp+i); i++)
+    {
+        strncpy(&audiences[len], audp[i], sizeof(audiences) - 1 - len);
+        len = strnlen(audiences, sizeof(audiences));
+        if (len >= sizeof(audiences) - 1)
+        {
+            break;
+        }
+
+        audiences[len] = ' ';
+        len++;
+    }
+    audiences[sizeof(audiences) - 1] = '\0';
+    logger(LOG_TYPE_INFO, "audiences: %s", audiences);
+
+    if (!(enf = enforcer_create(issuer_ptr, audp, &err_msg)))
     {
         logger(LOG_TYPE_INFO,
         	"Failed to create enforcer\n %s",
@@ -88,17 +102,51 @@ int scitoken_verify(const char * auth_line, const struct config * config, const 
     }
 
     Acl acl;
-    acl.authz = "ssh";
-    acl.resource = scitoken_requested_user;
+    acl.authz = "";
+    acl.resource = "";
 
     if (enforcer_test(enf, scitoken, &acl, &err_msg))
     {
 	logger(LOG_TYPE_INFO,
-		"Failed enforcer test %s %s %s %s",
-		err_msg, acl.authz, acl.resource,aud_list[0]);
+	       "Failed enforcer test %s %s",
+	       err_msg, audiences);
 	free(err_msg);
         return 0;
     }
 
-    return 1;
+    char* subject_ptr = NULL;
+    if(scitoken_get_claim_string(scitoken, "hpci.id", &subject_ptr, &err_msg))
+    {
+        logger(LOG_TYPE_INFO,
+               "Failed to get claim \n %s",
+               err_msg);
+        free(err_msg);
+        return 0;
+    }
+
+    struct account_map * account_map;
+    account_map = account_map_init_without_globus(config);
+
+    char **local_accounts = acct_to_local_accounts(account_map, subject_ptr);
+    if (local_accounts == NULL)
+    {
+        logger(LOG_TYPE_INFO,
+               "subject %s does not exist in account map",
+                subject_ptr);
+        account_map_fini(account_map);
+        return 0;
+    }
+
+    logger(LOG_TYPE_INFO, "requested user: %s", scitoken_requested_user);
+    for (int i = 0; local_accounts[i]; i++) {
+        logger(LOG_TYPE_INFO, "compared to local account: %s", local_accounts[i]);
+        if (strcmp(local_accounts[i], scitoken_requested_user) == 0) {
+            account_map_fini(account_map);
+            return 1;
+        }
+    }
+    logger(LOG_TYPE_INFO, "this user is not authorized as requested user");
+    account_map_fini(account_map);
+
+    return 0;
 }
