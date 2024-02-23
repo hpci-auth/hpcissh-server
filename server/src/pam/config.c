@@ -4,12 +4,13 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <string.h>
+#include <strings.h>
 #include <stdio.h>
 
 /*
  * Local includes.
  */
-#include "strings.h"
+#include "o_str.h"
 #include "config.h"
 #include "parser.h"
 #include "logger.h"

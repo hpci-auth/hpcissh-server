@@ -1,5 +1,5 @@
-#ifndef _STRINGS_H_
-#define _STRINGS_H_
+#ifndef _OAUTH_SSH_STRINGS_H_
+#define _OAUTH_SSH_STRINGS_H_
 
 /*
  * System includes.
@@ -32,4 +32,4 @@ string_has_suffix(const char * string, const char * suffix);
 void
 free_array(char ** array);
 
-#endif /* _STRINGS_H_ */
+#endif /* _OAUTH_SSH_STRINGS_H_ */

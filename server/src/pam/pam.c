@@ -21,7 +21,7 @@
 #include "globus_auth.h"
 #include "identities.h"
 #include "introspect.h"
-#include "strings.h"
+#include "o_str.h"
 #include "client.h"
 #include "config.h"
 #include "logger.h"

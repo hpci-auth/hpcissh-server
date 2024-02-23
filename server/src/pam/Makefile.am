@@ -30,8 +30,8 @@ pam_oauth_ssh_la_SOURCES = account_map.c \
                         pam.c \
                         parser.c \
                         parser.h \
-                        strings.c \
-                        strings.h
+                        o_str.c \
+                        o_str.h
 if WITH_SCITOKENS
 pam_oauth_ssh_la_SOURCES += scitokens_verify.c \
                         scitokens_verify.h

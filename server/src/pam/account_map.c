@@ -9,7 +9,7 @@
  * Local includes.
  */
 #include "account_map.h"
-#include "strings.h"
+#include "o_str.h"
 #include "logger.h"
 #include "parser.h"
 #include "debug.h" // always last
