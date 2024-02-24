@@ -34,4 +34,12 @@ _install-pre-commit: _venv
 lint: _install-pre-commit
 	./venv/bin/pre-commit run --all-files
 
+RPM := ./server/RPMS/x86_64/oauth-ssh-0.11-1.el8.x86_64.rpm
+
+rpm-install:
+	rpm -qi $(RPM)
+	dnf install $(RPM)
+rpm-uninstall:
+	dnf remove oauth-ssh
+
 .PHONY: all develop test release clean
