@@ -13,19 +13,15 @@ help all:
 	@echo "$$HELPTEXT"
 
 develop: _install-pre-commit
-	$(MAKE) -C client develop
 	$(MAKE) -C server -f Makefile.bootstrap develop
 
 test:
-	$(MAKE) -C client test
 	$(MAKE) -C server -f Makefile.bootstrap test
 
 release:
-	$(MAKE) -C client release
 	$(MAKE) -C server -f Makefile.bootstrap release
 
 clean:
-	$(MAKE) -C client clean
 	[[ ! -f server/Makefile ]] || $(MAKE) -C server clean
 
 _venv:
