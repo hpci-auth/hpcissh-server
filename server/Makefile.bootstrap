@@ -34,7 +34,7 @@ install_prereqs:
 DEVELOP_PREREQS=\
 	autoconf \
 	automake \
-	cmake3 \
+	cmake \
 	libcmocka-devel \
 	libcmocka \
 	libcmocka-static \
@@ -45,9 +45,9 @@ DEVELOP_PREREQS=\
 	libtool-ltdl-devel \
 	openssl-devel \
 	pam-devel \
-	pkgconfig \
-	python3 \
-	python-setuptools
+	pkgconf-pkg-config \
+	python36 \
+	platform-python-setuptools
 
 MISSING_DEVELOP_PREREQS=$(shell \
 	for p in ${DEVELOP_PREREQS}; do \
@@ -65,8 +65,8 @@ install_develop_prereqs: install_prereqs
 
 RELEASE_PREREQS=\
 	checkpolicy \
-	policycoreutils-python \
-	python-setuptools \
+	policycoreutils-python-utils \
+	platform-python-setuptools \
 	rpm-build
 
 MISSING_RELEASE_PREREQS=$(shell \

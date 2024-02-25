@@ -2,12 +2,13 @@
  * System includes.
  */
 #include <string.h>
+#include <strings.h>
 
 /*
  * Local includes.
  */
 #include "globus_auth.h"
-#include "strings.h"
+#include "o_str.h"
 #include "logger.h"
 #include "http.h"
 #include "json.h"

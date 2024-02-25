@@ -4,12 +4,13 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <string.h>
+#include <strings.h>
 #include <stdio.h>
 
 /*
  * Local includes.
  */
-#include "strings.h"
+#include "o_str.h"
 #include "config.h"
 #include "parser.h"
 #include "logger.h"
@@ -118,6 +119,7 @@ parse_file(struct config * config)
     bool client_id_set = false;
     bool timeout_set = false;
     bool mfa_set = false;
+    int mfa_tmp;
 
     status_t status = failure;
     while (read_next_pair(fptr, &key, &values))
@@ -195,8 +197,8 @@ parse_file(struct config * config)
             if (status != success)
                 goto cleanup;
 
-            config->mfa = convert_bool(values[0]);
-            if (config->mfa == -1)
+            mfa_tmp = convert_bool(values[0]);
+            if (mfa_tmp == -1)
             {
                 logger(LOG_TYPE_ERROR,
                        "Illegal value '%s' for mfa configuration option",
@@ -204,6 +206,7 @@ parse_file(struct config * config)
                        CONFIG_DEFAULT_FILE);
                 goto cleanup;
             }
+            config->mfa = mfa_tmp;
 
             mfa_set = true;
         }

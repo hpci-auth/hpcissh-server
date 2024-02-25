@@ -8,7 +8,7 @@
 /*
  * Local includes.
  */
-#include "strings.h"
+#include "o_str.h"
 #include "debug.h" // always last
 
 char *

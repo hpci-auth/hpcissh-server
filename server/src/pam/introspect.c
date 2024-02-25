@@ -9,7 +9,7 @@
  * Local includes.
  */
 #include "introspect.h"
-#include "strings.h"
+#include "o_str.h"
 #include "logger.h"
 #include "json.h"
 #include "debug.h" // always last

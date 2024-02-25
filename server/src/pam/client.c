@@ -10,7 +10,7 @@
  */
 #include "client.h"
 #include "logger.h"
-#include "strings.h"
+#include "o_str.h"
 #include "json.h"
 #include "debug.h" // always last
 

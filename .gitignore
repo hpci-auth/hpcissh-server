@@ -12,6 +12,7 @@ libtool
 oauth_ssh-*.tar.gz
 server/packaging/fedora/oauth-ssh.spec
 server/src/config/setup.cfg
+/server/src/config/oauth_ssh_config.egg-info/
 .deps
 .libs
 
