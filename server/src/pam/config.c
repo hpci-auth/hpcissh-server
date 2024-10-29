@@ -72,6 +72,7 @@ merge_values(char ** current_values, char ** new_values)
         {
             return_values[j++] = strdup(new_values[i]);
         }
+        return_values[j++] = NULL;
     }
 
     return return_values;
