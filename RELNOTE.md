@@ -1,5 +1,9 @@
 # Release note for hpcissh-server
 
+## version 1.3 (2024-10-29)
+
+- support multiple issuers
+
 ## version 1.2 (2024-02-26)
 
 - fix "warning: implicit declaration of function 'strcasecmp'"

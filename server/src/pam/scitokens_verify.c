@@ -31,7 +31,10 @@ int scitoken_verify(const char * auth_line, const struct config * config, const 
 	return 0;
     }
 
-    size_t numberofissuers = sizeof(config->issuers)/sizeof(config->issuers[0]);
+    size_t numberofissuers = 0;
+    for (int i = 0; config->issuers && config->issuers[i]; i++) {
+      numberofissuers++;
+    }
 
     char *null_ended_list[numberofissuers+1];
 
@@ -64,6 +67,7 @@ int scitoken_verify(const char * auth_line, const struct config * config, const 
         free(err_msg);
         return 0;
     }
+    //logger(LOG_TYPE_INFO, "issuser: %s", issuer_ptr);
 
     //Preparing for enforcer test
     Enforcer enf;
